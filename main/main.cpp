@@ -60,10 +60,11 @@ int main(const int arguments_count, char **const arguments_value)
 
                 json::value pipe_json;                /* configor of desktop */
                 file_stream >> json::wrap(pipe_json); /* read json file */
-                Debug_Log(pipe_json["app"].get<string>());
+                Debug_Log(pipe_json["path"].get<string>());
+                Debug_Log(pipe_json["argument"].get<string>());
                 file_stream.close();
 
-                if (0 != execlp(pipe_json["app"].get<string>().data(), "app", pipe_json["argument"].get<string>().data(), nullptr))
+                if (0 != execlp(pipe_json["path"].get<string>().data(), "app", pipe_json["argument"].get<string>().data(), nullptr))
                 {
                     perror("app");
                     exit(-1);
