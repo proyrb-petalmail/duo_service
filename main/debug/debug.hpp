@@ -1,43 +1,72 @@
-#ifndef DEBUG_H
-#define DEBUG_H
-
-#include <string.h>
-#define GET_FILE_NAME(x) (strrchr(x, '/') ? strrchr(x, '/') + 1 : x)
-#define COLON            " "
-
-#ifdef __cplusplus
+#pragma once
 
 #include <iostream>
-using namespace std;
-#define LOG_MESSAGE(...)                                                                                                                             \
-    while (DEBUG)                                                                                                                                    \
-    {                                                                                                                                                \
-        clog << "[" << GET_FILE_NAME(__FILE__) << COLON << __LINE__ << "] " << __VA_ARGS__ << endl;                                                  \
-        break;                                                                                                                                       \
-    }
-#define LOG_COMMAND(...)                                                                                                                             \
-    while (DEBUG)                                                                                                                                    \
-    {                                                                                                                                                \
-        LOG_MESSAGE("command" COLON "\"" << __VA_ARGS__ << "\"");                                                                                    \
-        break;                                                                                                                                       \
-    }
-#define LOG_COMMAND_RESULT(...)                                                                                                                      \
-    while (DEBUG)                                                                                                                                    \
-    {                                                                                                                                                \
-        LOG_MESSAGE("command result" COLON << __VA_ARGS__);                                                                                          \
-        break;                                                                                                                                       \
-    }
+#include <string>
 
-#elif /* __cplusplus */
-
-#include <stdio.h>
-#define LOG_MESSAGE(message)                                                                                                                         \
-    while (DEBUG)                                                                                                                                    \
+/**
+ * @brief output debug log.
+ * @param ... what you want to output.
+ * @version 1.0
+ * @date 2024/9/19
+ * @author ProYRB
+ */
+#define Debug_Log(...)                                                                                                                               \
+    while (Debug && (Debug_Level >= 3))                                                                                                              \
     {                                                                                                                                                \
-        printf("[%s" COLON "%d]%s\n", GET_FILE_NAME(__FILE__), __LINE__, message);                                                                   \
+        std::string temporary(__FILE__);                                                                                                             \
+        const std::size_t index = temporary.rfind("/");                                                                                              \
+        std::clog << "\033[0;30m" << "[" << ((string::npos != index) ? temporary.substr(index + 1) : temporary) << ":" << __LINE__ << "]"            \
+                  << __VA_ARGS__ << "\033[0m" << std::endl;                                                                                          \
         break;                                                                                                                                       \
     }
 
-#endif /* __cplusplus */
+/**
+ * @brief output debug notice.
+ * @param ... what you want to output.
+ * @version 1.0
+ * @date 2024/9/19
+ * @author ProYRB
+ */
+#define Debug_Notice(...)                                                                                                                            \
+    while (Debug && (Debug_Level >= 2))                                                                                                              \
+    {                                                                                                                                                \
+        std::string temporary(__FILE__);                                                                                                             \
+        const std::size_t index = temporary.rfind("/");                                                                                              \
+        std::clog << "\033[0;32m" << "[" << ((string::npos != index) ? temporary.substr(index + 1) : temporary) << ":" << __LINE__ << "]"            \
+                  << __VA_ARGS__ << "\033[0m" << std::endl;                                                                                          \
+        break;                                                                                                                                       \
+    }
 
-#endif /* DEBUG_H */
+/**
+ * @brief output debug warn.
+ * @param ... what you want to output.
+ * @version 1.0
+ * @date 2024/9/19
+ * @author ProYRB
+ */
+#define Debug_Warn(...)                                                                                                                              \
+    while (Debug && (Debug_Level >= 1))                                                                                                              \
+    {                                                                                                                                                \
+        std::string temporary(__FILE__);                                                                                                             \
+        const std::size_t index = temporary.rfind("/");                                                                                              \
+        std::clog << "\033[1;33m" << "[" << ((string::npos != index) ? temporary.substr(index + 1) : temporary) << ":" << __LINE__ << "]"            \
+                  << __VA_ARGS__ << "\033[0m" << std::endl;                                                                                          \
+        break;                                                                                                                                       \
+    }
+
+/**
+ * @brief output debug error.
+ * @param ... what you want to output.
+ * @version 1.0
+ * @date 2024/9/19
+ * @author ProYRB
+ */
+#define Debug_Error(...)                                                                                                                             \
+    while (Debug && (Debug_Level >= 0))                                                                                                              \
+    {                                                                                                                                                \
+        std::string temporary(__FILE__);                                                                                                             \
+        const std::size_t index = temporary.rfind("/");                                                                                              \
+        std::cerr << "\033[1;31m" << "[" << ((string::npos != index) ? temporary.substr(index + 1) : temporary) << ":" << __LINE__ << "]"            \
+                  << __VA_ARGS__ << "\033[0m" << std::endl;                                                                                          \
+        break;                                                                                                                                       \
+    }

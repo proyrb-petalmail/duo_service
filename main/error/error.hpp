@@ -1,89 +1,61 @@
 #pragma once
 
-#include "debug.hpp"
-#include "main.hpp"
-
 #include <exception>
 #include <string>
 
-#define ERROR_INFORMATION(information) string("[") + GET_FILE_NAME(__FILE__) + COLON + to_string(__LINE__) + "] " + information
-
-namespace NAMESPACE
+namespace service
 {
-    typedef enum
-    {
-        NONE_ERROR = 0,
-        OPEN_ERROR = 1L << 0,
-        READ_ERROR = 1L << 1,
-        COPY_ERROR = 1L << 2,
-        JSON_ERROR = 1L << 3,
-        FIND_ERROR = 1L << 4,
-        RANGE_ERROR = 1L << 5,
-        CREATE_ERROR = 1L << 6,
-    } error_type_enum;
-
     class error : public std::exception
     {
+    public:
+        /**
+         * @brief the enum of error.
+         * @param Null null error.
+         * @param Open open error.
+         * @param Read read error.
+         * @param Copy copy error.
+         * @param Find find error.
+         * @param Range range error.
+         * @param Create create error.
+         * @version 1.0
+         * @date 2024/9/19
+         * @author ProYRB
+         */
+        typedef enum
+        {
+            Void = 0UL,
+            Open = 1UL << 0,
+            Read = 1UL << 1,
+            Copy = 1UL << 2,
+            Json = 1UL << 3,
+            Find = 1UL << 4,
+            Type = 1UL << 5,
+            Range = 1UL << 6,
+            Create = 1UL << 7,
+        } error_enum;
+
     private:
-        error_type_enum type_enum;
-        std::string type_name;
-        std::string message;
+        error_enum type;
 
     public:
-        template <typename _message_type> error(const error_type_enum type, _message_type message);
-        ~error();
-        const char *what(void);
-        const error_type_enum get_type_enum(void);
-        const std::string &get_type_name(void);
-        const std::string &get_message(void);
-    };
+        /**
+         * @brief generate a error with type.
+         * @param type which type of error.
+         * @version 1.0
+         * @date 2024/9/19
+         * @author ProYRB
+         */
+        error(const error_enum type);
 
-    template <typename _message_type> error::error(const error_type_enum type_enum, _message_type message)
-    {
-        this->type_enum = type_enum;
-        switch (this->type_enum)
-        {
-        case OPEN_ERROR:
-        {
-            this->type_name = "open_error";
-        }
-        break;
-        case READ_ERROR:
-        {
-            this->type_name = "read_error";
-        }
-        break;
-        case COPY_ERROR:
-        {
-            this->type_name = "copy_error";
-        }
-        break;
-        case JSON_ERROR:
-        {
-            this->type_name = "json_error";
-        }
-        break;
-        case FIND_ERROR:
-        {
-            this->type_name = "find_error";
-        }
-        break;
-        case RANGE_ERROR:
-        {
-            this->type_name = "range_error";
-        }
-        break;
-        case CREATE_ERROR:
-        {
-            this->type_name = "create_error";
-        }
-        break;
-        default:
-        {
-            this->type_name = "null";
-        }
-        break;
-        }
-        this->message = message;
-    }
-} // namespace NAMESPACE
+        ~error();
+
+        /**
+         * @brief get type of error.
+         * @return return the type of error.
+         * @version 1.0
+         * @date 2024/9/19
+         * @author ProYRB
+         */
+        const error_enum get_type();
+    };
+} // namespace service

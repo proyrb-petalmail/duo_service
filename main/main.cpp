@@ -1,85 +1,83 @@
 #include "main.hpp"
+#include "argument.hpp"
 #include "cmdline.hpp"
 #include "debug.hpp"
 #include "error.hpp"
 #include "json.hpp"
 
 #include <fstream>
+#include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 /* using namespace */
+using namespace std;
 using namespace cmdline;
 using namespace configor;
-using namespace NAMESPACE;
+using namespace service;
 
-/* pipe argument */
-#define ARGUMENT_CONFIG         "pipe"
-#define ARGUMENT_CONFIG_SHORT   'p'
-#define ARGUMENT_CONFIG_REFER   "load pipe"
-#define ARGUMENT_CONFIG_NEED    false
-#define ARGUMENT_CONFIG_DEFAULT "pipe.json"
+static void signal_handle(int signal) { Debug_Notice("switch process successfully"); }
 
-int main(int arguments_count, char *arguments_value[])
+int main(const int arguments_count, char **const arguments_value)
 {
+    signal(SIGINT, signal_handle);
+
     /* parse arguments */
     parser arguments_parser;
-    arguments_parser.add<string>(ARGUMENT_CONFIG, ARGUMENT_CONFIG_SHORT, ARGUMENT_CONFIG_REFER, ARGUMENT_CONFIG_NEED,
-                                 ARGUMENT_CONFIG_DEFAULT);                               /* add config argument */
-    arguments_parser.parse_check(arguments_count, arguments_value);                      /* check arguments */
-    LOG_MESSAGE(ARGUMENT_CONFIG COLON << arguments_parser.get<string>(ARGUMENT_CONFIG)); /* output config value */
+    arguments_parser.add<string>(Argument_Pipe, Argument_Pipe_Short, Argument_Pipe_Refer, Argument_Pipe_Need, Argument_Pipe_Default); /* add pipe */
+    arguments_parser.parse_check(arguments_count, arguments_value); /* execute checking */
+    Debug_Log("--" Argument_Pipe "=" << arguments_parser.get<string>(Argument_Pipe));
 
     while (true)
     {
         static int status = 0;
-        if (fork() == 0)
+        int fork_id = fork();
+        if (0 == fork_id)
         {
             switch (status)
             {
             case 0:
             {
-                clog << "desktop process" << endl;
-
-                execlp("./desktop", "", nullptr);
-                perror("./desktop");
-                exit(-1);
+                Debug_Log("desktop process");
+                if (0 != execlp("./desktop", "desktop", nullptr))
+                {
+                    perror("./desktop");
+                    exit(-1);
+                }
                 break;
             }
             case 1:
             {
-                clog << "app process" << endl;
+                Debug_Log("app process");
 
-                /* get configor */
-                ifstream file_stream(arguments_parser.get<string>(ARGUMENT_CONFIG)); /* open config json */
+                /* get pipe */
+                ifstream file_stream(arguments_parser.get<string>(Argument_Pipe)); /* open pipe json */
                 if (false == file_stream.is_open())
                 {
-                    LOG_COMMAND_RESULT(file_stream.rdstate()); /* output command result value */
-                    return false;
+                    Debug_Error(file_stream.rdstate());
+                    exit(-1);
                 }
 
-                configor::json::value pipe_json;                           /* configor of desktop */
-                file_stream >> json::wrap(pipe_json);                      /* read json file */
-                LOG_MESSAGE(pipe_json["app_relative_path"].get<string>()); /* output json content */
+                json::value pipe_json;                /* configor of desktop */
+                file_stream >> json::wrap(pipe_json); /* read json file */
+                Debug_Log(pipe_json["app"].get<string>());
+                file_stream.close();
 
-                execlp(pipe_json["app_relative_path"].get<string>().data(), "", nullptr);
-                perror("app_relative_path");
-                exit(-1);
+                if (0 != execlp(pipe_json["app"].get<string>().data(), "app", pipe_json["argument"].get<string>().data(), nullptr))
+                {
+                    perror("app");
+                    exit(-1);
+                }
                 break;
             }
             }
         }
         else
         {
-            clog << "parent process" << endl;
-
+            Debug_Notice("child process id " << fork_id);
             int childprocess_return_value;
             wait(&childprocess_return_value);
-            printf("child process return %d\n", childprocess_return_value);
-
-            if (0 != childprocess_return_value)
-            {
-                exit(-1);
-            }
+            Debug_Notice("child process return " << childprocess_return_value);
 
             switch (status)
             {
