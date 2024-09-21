@@ -28,6 +28,19 @@ int main(const int arguments_count, char **const arguments_value)
     arguments_parser.parse_check(arguments_count, arguments_value); /* execute checking */
     Debug_Log("--" Argument_Pipe "=" << arguments_parser.get<string>(Argument_Pipe));
 
+    json::value tmp_pipe_json;
+    tmp_pipe_json["path"] = "";
+    tmp_pipe_json["argument"] = "";
+    ofstream outfile_stream(arguments_parser.get<string>(Argument_Pipe)); /* open pipe json */
+    if (false == outfile_stream.is_open())
+    {
+        Debug_Error("failed to open pipe json");
+        throw error(error::error_enum::Open);
+    }
+    outfile_stream << setw(4) << json::wrap(tmp_pipe_json); /* read pipe json */
+    outfile_stream.close();
+    Debug_Notice("clear pipe successfully");
+
     while (true)
     {
         static int status = 0;
